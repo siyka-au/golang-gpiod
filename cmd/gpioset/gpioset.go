@@ -5,7 +5,7 @@
 //go:build linux
 // +build linux
 
-// A clone of libgpiod gpioset.
+// A clone of libgpiocdev gpioset.
 package main
 
 import (
@@ -22,7 +22,7 @@ import (
 	"github.com/warthog618/config/dict"
 	"github.com/warthog618/config/keys"
 	"github.com/warthog618/config/pflag"
-	"github.com/warthog618/gpiod"
+	"github.com/warthog618/go-gpiocdev"
 )
 
 var version = "undefined"
@@ -30,7 +30,7 @@ var version = "undefined"
 func main() {
 	cfg, flags := loadConfig()
 	name := flags.Args()[0]
-	c, err := gpiod.NewChip(name, gpiod.WithConsumer("gpioset"))
+	c, err := gpiocdev.NewChip(name, gpiocdev.WithConsumer("gpioset"))
 	if err != nil {
 		die(err.Error())
 	}
@@ -77,19 +77,19 @@ func wait(cfg *config.Config) {
 	}
 }
 
-func makeOpts(cfg *config.Config, vv []int) []gpiod.LineReqOption {
-	opts := []gpiod.LineReqOption{gpiod.AsOutput(vv...)}
+func makeOpts(cfg *config.Config, vv []int) []gpiocdev.LineReqOption {
+	opts := []gpiocdev.LineReqOption{gpiocdev.AsOutput(vv...)}
 	if cfg.MustGet("active-low").Bool() {
-		opts = append(opts, gpiod.AsActiveLow)
+		opts = append(opts, gpiocdev.AsActiveLow)
 	}
 	bias := strings.ToLower(cfg.MustGet("bias").String())
 	switch bias {
 	case "pull-up":
-		opts = append(opts, gpiod.WithPullUp)
+		opts = append(opts, gpiocdev.WithPullUp)
 	case "pull-down":
-		opts = append(opts, gpiod.WithPullDown)
+		opts = append(opts, gpiocdev.WithPullDown)
 	case "disable":
-		opts = append(opts, gpiod.WithBiasDisabled)
+		opts = append(opts, gpiocdev.WithBiasDisabled)
 	case "as-is":
 		fallthrough
 	default:
@@ -97,9 +97,9 @@ func makeOpts(cfg *config.Config, vv []int) []gpiod.LineReqOption {
 	drive := strings.ToLower(cfg.MustGet("drive").String())
 	switch drive {
 	case "open-drain":
-		opts = append(opts, gpiod.AsOpenDrain)
+		opts = append(opts, gpiocdev.AsOpenDrain)
 	case "open-source":
-		opts = append(opts, gpiod.AsOpenSource)
+		opts = append(opts, gpiocdev.AsOpenSource)
 	case "push-pull":
 		fallthrough
 	default:
@@ -222,5 +222,5 @@ func printHelp() {
 }
 
 func printVersion() {
-	fmt.Printf("%s (gpiod) %s\n", os.Args[0], version)
+	fmt.Printf("%s (gpiocdev) %s\n", os.Args[0], version)
 }

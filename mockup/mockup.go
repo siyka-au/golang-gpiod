@@ -7,8 +7,8 @@
 
 // Package mockup provides GPIO mockups using the Linux gpio-mockup kernel
 // module.
-// This is intended for GPIO testing of gpiod, but could also be used for
-// testing by users of their own code that uses gpiod.
+// This is intended for GPIO testing of gpiocdev, but could also be used for
+// testing by users of their own code that uses gpiocdev.
 package mockup
 
 import (
@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/warthog618/gpiod"
+	"github.com/warthog618/go-gpiocdev"
 	"golang.org/x/sys/unix"
 )
 
@@ -101,7 +101,7 @@ type ModprobeMonitor interface {
 }
 
 func newModprobeMonitor() (ModprobeMonitor, error) {
-	if len(gpiod.Chips()) != 0 {
+	if len(gpiocdev.Chips()) != 0 {
 		// need udev monitor to determine chip details...
 		return newUdevMonitor()
 	}

@@ -15,9 +15,9 @@ import (
 	"github.com/warthog618/config/dict"
 	"github.com/warthog618/config/env"
 	"github.com/warthog618/config/pflag"
-	"github.com/warthog618/gpiod"
-	"github.com/warthog618/gpiod/device/rpi"
-	"github.com/warthog618/gpiod/spi/mcp3w0c"
+	"github.com/warthog618/go-gpiocdev"
+	"github.com/warthog618/go-gpiocdev/device/rpi"
+	"github.com/warthog618/go-gpiocdev/spi/mcp3w0c"
 )
 
 // This example reads both channels from an MCP3008 connected to the RPI by four
@@ -35,7 +35,7 @@ func main() {
 		tset -= tclk
 	}
 	chip := cfg.MustGet("gpiochip").String()
-	c, err := gpiod.NewChip(chip, gpiod.WithConsumer("mcp3008"))
+	c, err := gpiocdev.NewChip(chip, gpiocdev.WithConsumer("mcp3008"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "mcp3008: %s\n", err)
 		os.Exit(1)

@@ -15,9 +15,9 @@ import (
 	"github.com/warthog618/config/dict"
 	"github.com/warthog618/config/env"
 	"github.com/warthog618/config/pflag"
-	"github.com/warthog618/gpiod"
-	"github.com/warthog618/gpiod/device/rpi"
-	"github.com/warthog618/gpiod/spi/adc0832"
+	"github.com/warthog618/go-gpiocdev"
+	"github.com/warthog618/go-gpiocdev/device/rpi"
+	"github.com/warthog618/go-gpiocdev/spi/adc0832"
 )
 
 // This example reads both channels from an ADC0832 connected to the RPI by four
@@ -35,7 +35,7 @@ func main() {
 		tset -= tclk
 	}
 	chip := cfg.MustGet("gpiochip").String()
-	c, err := gpiod.NewChip(chip, gpiod.WithConsumer("adc0832"))
+	c, err := gpiocdev.NewChip(chip, gpiocdev.WithConsumer("adc0832"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "adc0832: %s\n", err)
 		os.Exit(1)

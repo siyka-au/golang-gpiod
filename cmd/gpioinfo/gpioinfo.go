@@ -5,7 +5,7 @@
 //go:build linux
 // +build linux
 
-// A clone of libgpiod gpioinfo.
+// A clone of libgpiocdev gpioinfo.
 package main
 
 import (
@@ -15,7 +15,7 @@ import (
 
 	"github.com/warthog618/config"
 	"github.com/warthog618/config/pflag"
-	"github.com/warthog618/gpiod"
+	"github.com/warthog618/go-gpiocdev"
 )
 
 var version = "undefined"
@@ -25,10 +25,10 @@ func main() {
 	rc := 0
 	cc := append([]string(nil), flags.Args()...)
 	if len(cc) == 0 {
-		cc = gpiod.Chips()
+		cc = gpiocdev.Chips()
 	}
 	for _, path := range cc {
-		c, err := gpiod.NewChip(path)
+		c, err := gpiocdev.NewChip(path)
 		if err != nil {
 			logErr(err)
 			rc = 1
@@ -71,7 +71,7 @@ func logErr(err error) {
 	fmt.Fprintln(os.Stderr, "gpioinfo:", err)
 }
 
-func printLineInfo(li gpiod.LineInfo) {
+func printLineInfo(li gpiocdev.LineInfo) {
 	if len(li.Name) == 0 {
 		li.Name = "unnamed"
 	}
@@ -86,7 +86,7 @@ func printLineInfo(li gpiod.LineInfo) {
 		li.Consumer = "unused"
 	}
 	dirn := "input"
-	if li.Config.Direction == gpiod.LineDirectionOutput {
+	if li.Config.Direction == gpiocdev.LineDirectionOutput {
 		dirn = "output"
 	}
 	active := "active-high"
@@ -98,17 +98,17 @@ func printLineInfo(li gpiod.LineInfo) {
 		attrs = append(attrs, "used")
 	}
 	switch li.Config.Drive {
-	case gpiod.LineDriveOpenDrain:
+	case gpiocdev.LineDriveOpenDrain:
 		attrs = append(attrs, "open-drain")
-	case gpiod.LineDriveOpenSource:
+	case gpiocdev.LineDriveOpenSource:
 		attrs = append(attrs, "open-source")
 	}
 	switch li.Config.Bias {
-	case gpiod.LineBiasPullUp:
+	case gpiocdev.LineBiasPullUp:
 		attrs = append(attrs, "pull-up")
-	case gpiod.LineBiasPullDown:
+	case gpiocdev.LineBiasPullDown:
 		attrs = append(attrs, "pull-down")
-	case gpiod.LineBiasDisabled:
+	case gpiocdev.LineBiasDisabled:
 		attrs = append(attrs, "bias-disabled")
 	}
 	if li.Config.DebouncePeriod != 0 {
@@ -133,5 +133,5 @@ func printHelp() {
 }
 
 func printVersion() {
-	fmt.Printf("%s (gpiod) %s\n", os.Args[0], version)
+	fmt.Printf("%s (gpiocdev) %s\n", os.Args[0], version)
 }

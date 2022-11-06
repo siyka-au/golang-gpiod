@@ -5,7 +5,7 @@
 //go:build linux
 // +build linux
 
-// A clone of libgpiod gpiomon.
+// A clone of libgpiocdev gpiomon.
 package main
 
 import (
@@ -21,7 +21,7 @@ import (
 	"github.com/warthog618/config/dict"
 	"github.com/warthog618/config/keys"
 	"github.com/warthog618/config/pflag"
-	"github.com/warthog618/gpiod"
+	"github.com/warthog618/go-gpiocdev"
 )
 
 var version = "undefined"
@@ -29,14 +29,14 @@ var version = "undefined"
 func main() {
 	cfg, flags := loadConfig()
 	name := flags.Args()[0]
-	c, err := gpiod.NewChip(name, gpiod.WithConsumer("gpiomon"))
+	c, err := gpiocdev.NewChip(name, gpiocdev.WithConsumer("gpiomon"))
 	if err != nil {
 		die(err.Error())
 	}
 	defer c.Close()
 	oo := parseOffsets(flags.Args()[1:])
-	evtchan := make(chan gpiod.LineEvent)
-	eh := func(evt gpiod.LineEvent) {
+	evtchan := make(chan gpiocdev.LineEvent)
+	eh := func(evt gpiocdev.LineEvent) {
 		evtchan <- evt
 	}
 	opts := makeOpts(cfg, eh)
@@ -48,7 +48,7 @@ func main() {
 	wait(cfg, evtchan)
 }
 
-func wait(cfg *config.Config, evtchan <-chan gpiod.LineEvent) {
+func wait(cfg *config.Config, evtchan <-chan gpiocdev.LineEvent) {
 	sigdone := make(chan os.Signal, 1)
 	signal.Notify(sigdone, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(sigdone)
@@ -61,7 +61,7 @@ func wait(cfg *config.Config, evtchan <-chan gpiod.LineEvent) {
 			if !silent {
 				t := time.Now()
 				edge := "rising"
-				if evt.Type == gpiod.LineEventFallingEdge {
+				if evt.Type == gpiocdev.LineEventFallingEdge {
 					edge = "falling"
 				}
 				fmt.Printf("event:%3d %-7s %s (%s)\n",
@@ -80,19 +80,19 @@ func wait(cfg *config.Config, evtchan <-chan gpiod.LineEvent) {
 	}
 }
 
-func makeOpts(cfg *config.Config, eh gpiod.EventHandler) []gpiod.LineReqOption {
-	opts := []gpiod.LineReqOption{gpiod.WithEventHandler(eh)}
+func makeOpts(cfg *config.Config, eh gpiocdev.EventHandler) []gpiocdev.LineReqOption {
+	opts := []gpiocdev.LineReqOption{gpiocdev.WithEventHandler(eh)}
 	if cfg.MustGet("active-low").Bool() {
-		opts = append(opts, gpiod.AsActiveLow)
+		opts = append(opts, gpiocdev.AsActiveLow)
 	}
 	bias := strings.ToLower(cfg.MustGet("bias").String())
 	switch bias {
 	case "pull-up":
-		opts = append(opts, gpiod.WithPullUp)
+		opts = append(opts, gpiocdev.WithPullUp)
 	case "pull-down":
-		opts = append(opts, gpiod.WithPullDown)
+		opts = append(opts, gpiocdev.WithPullDown)
 	case "disable":
-		opts = append(opts, gpiod.WithBiasDisabled)
+		opts = append(opts, gpiocdev.WithBiasDisabled)
 	case "as-is":
 		fallthrough
 	default:
@@ -100,13 +100,13 @@ func makeOpts(cfg *config.Config, eh gpiod.EventHandler) []gpiod.LineReqOption {
 	edge := strings.ToLower(cfg.MustGet("edge").String())
 	switch edge {
 	case "falling":
-		opts = append(opts, gpiod.WithFallingEdge)
+		opts = append(opts, gpiocdev.WithFallingEdge)
 	case "rising":
-		opts = append(opts, gpiod.WithRisingEdge)
+		opts = append(opts, gpiocdev.WithRisingEdge)
 	case "both":
 		fallthrough
 	default:
-		opts = append(opts, gpiod.WithBothEdges)
+		opts = append(opts, gpiocdev.WithBothEdges)
 	}
 	return opts
 }
@@ -202,5 +202,5 @@ func printHelp() {
 }
 
 func printVersion() {
-	fmt.Printf("%s (gpiod) %s\n", os.Args[0], version)
+	fmt.Printf("%s (gpiocdev) %s\n", os.Args[0], version)
 }

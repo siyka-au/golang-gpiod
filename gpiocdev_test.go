@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-package gpiod_test
+package gpiocdev_test
 
 import (
 	"errors"
@@ -14,10 +14,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/warthog618/gpiod"
-	"github.com/warthog618/gpiod/device/rpi"
-	"github.com/warthog618/gpiod/mockup"
-	"github.com/warthog618/gpiod/uapi"
+	"github.com/warthog618/go-gpiocdev"
+	"github.com/warthog618/go-gpiocdev/device/rpi"
+	"github.com/warthog618/go-gpiocdev/mockup"
+	"github.com/warthog618/go-gpiocdev/uapi"
 	"golang.org/x/sys/unix"
 )
 
@@ -49,45 +49,45 @@ var (
 )
 
 func TestRequestLine(t *testing.T) {
-	var opts []gpiod.LineReqOption
+	var opts []gpiocdev.LineReqOption
 	if kernelAbiVersion != 0 {
-		opts = append(opts, gpiod.ABIVersionOption(kernelAbiVersion))
+		opts = append(opts, gpiocdev.ABIVersionOption(kernelAbiVersion))
 	}
 
 	lo := platform.FloatingLines()[0]
 
 	// non-existent
-	l, err := gpiod.RequestLine(platform.Devpath()+"not", -1, opts...)
+	l, err := gpiocdev.RequestLine(platform.Devpath()+"not", -1, opts...)
 	assert.NotNil(t, err)
 	require.Nil(t, l)
 
 	// negative
-	l, err = gpiod.RequestLine(platform.Devpath(), -1, opts...)
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	l, err = gpiocdev.RequestLine(platform.Devpath(), -1, opts...)
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	require.Nil(t, l)
 
 	// out of range
-	l, err = gpiod.RequestLine(platform.Devpath(), platform.Lines())
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	l, err = gpiocdev.RequestLine(platform.Devpath(), platform.Lines())
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	require.Nil(t, l)
 
 	// success - input
-	l, err = gpiod.RequestLine(platform.Devpath(), lo)
+	l, err = gpiocdev.RequestLine(platform.Devpath(), lo)
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 
 	// already requested input
-	l2, err := gpiod.RequestLine(platform.Devpath(), lo)
+	l2, err := gpiocdev.RequestLine(platform.Devpath(), lo)
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, l2)
 
 	// already requested output
-	l2, err = gpiod.RequestLine(platform.Devpath(), lo, append(opts, gpiod.AsOutput(0))...)
+	l2, err = gpiocdev.RequestLine(platform.Devpath(), lo, append(opts, gpiocdev.AsOutput(0))...)
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, l2)
 
 	// already requested output as event
-	l2, err = gpiod.RequestLine(platform.Devpath(), lo, append(opts, gpiod.WithBothEdges)...)
+	l2, err = gpiocdev.RequestLine(platform.Devpath(), lo, append(opts, gpiocdev.WithBothEdges)...)
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, l2)
 
@@ -96,43 +96,43 @@ func TestRequestLine(t *testing.T) {
 }
 
 func TestRequestLines(t *testing.T) {
-	var opts []gpiod.LineReqOption
+	var opts []gpiocdev.LineReqOption
 	if kernelAbiVersion != 0 {
-		opts = append(opts, gpiod.ABIVersionOption(kernelAbiVersion))
+		opts = append(opts, gpiocdev.ABIVersionOption(kernelAbiVersion))
 	}
 
 	// non-existent
-	ll, err := gpiod.RequestLines(platform.Devpath()+"not", []int{platform.IntrLine(), -1}, opts...)
+	ll, err := gpiocdev.RequestLines(platform.Devpath()+"not", []int{platform.IntrLine(), -1}, opts...)
 	assert.NotNil(t, err)
 	require.Nil(t, ll)
 
 	// negative
-	ll, err = gpiod.RequestLines(platform.Devpath(), []int{platform.IntrLine(), -1}, opts...)
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	ll, err = gpiocdev.RequestLines(platform.Devpath(), []int{platform.IntrLine(), -1}, opts...)
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	require.Nil(t, ll)
 
 	// out of range
-	ll, err = gpiod.RequestLines(platform.Devpath(), []int{platform.IntrLine(), platform.Lines()})
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	ll, err = gpiocdev.RequestLines(platform.Devpath(), []int{platform.IntrLine(), platform.Lines()})
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	require.Nil(t, ll)
 
 	// success - output
-	ll, err = gpiod.RequestLines(platform.Devpath(), platform.FloatingLines(), gpiod.AsOutput())
+	ll, err = gpiocdev.RequestLines(platform.Devpath(), platform.FloatingLines(), gpiocdev.AsOutput())
 	assert.Nil(t, err)
 	require.NotNil(t, ll)
 
 	// already requested input
-	ll2, err := gpiod.RequestLines(platform.Devpath(), platform.FloatingLines())
+	ll2, err := gpiocdev.RequestLines(platform.Devpath(), platform.FloatingLines())
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, ll2)
 
 	// already requested output
-	ll2, err = gpiod.RequestLines(platform.Devpath(), platform.FloatingLines(), append(opts, gpiod.AsOutput())...)
+	ll2, err = gpiocdev.RequestLines(platform.Devpath(), platform.FloatingLines(), append(opts, gpiocdev.AsOutput())...)
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, ll2)
 
 	// already requested output as event
-	ll2, err = gpiod.RequestLines(platform.Devpath(), platform.FloatingLines(), append(opts, gpiod.WithBothEdges)...)
+	ll2, err = gpiocdev.RequestLines(platform.Devpath(), platform.FloatingLines(), append(opts, gpiocdev.WithBothEdges)...)
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, ll2)
 
@@ -141,12 +141,12 @@ func TestRequestLines(t *testing.T) {
 }
 
 func TestNewChip(t *testing.T) {
-	var chipOpts []gpiod.ChipOption
+	var chipOpts []gpiocdev.ChipOption
 	if kernelAbiVersion != 0 {
-		chipOpts = append(chipOpts, gpiod.ABIVersionOption(kernelAbiVersion))
+		chipOpts = append(chipOpts, gpiocdev.ABIVersionOption(kernelAbiVersion))
 	}
 	// non-existent
-	c, err := gpiod.NewChip(platform.Devpath()+"not", chipOpts...)
+	c, err := gpiocdev.NewChip(platform.Devpath()+"not", chipOpts...)
 	assert.NotNil(t, err)
 	assert.Nil(t, c)
 
@@ -156,14 +156,14 @@ func TestNewChip(t *testing.T) {
 	assert.Nil(t, err)
 
 	// name
-	c, err = gpiod.NewChip(platform.Name(), chipOpts...)
+	c, err = gpiocdev.NewChip(platform.Name(), chipOpts...)
 	assert.Nil(t, err)
 	require.NotNil(t, c)
 	err = c.Close()
 	assert.Nil(t, err)
 
 	// option
-	c = getChip(t, gpiod.WithConsumer("gpiod_test"))
+	c = getChip(t, gpiocdev.WithConsumer("gpiocdev_test"))
 	assert.Equal(t, platform.Name(), c.Name)
 	assert.Equal(t, platform.Label(), c.Label)
 	err = c.Close()
@@ -171,7 +171,7 @@ func TestNewChip(t *testing.T) {
 }
 
 func TestChips(t *testing.T) {
-	cc := gpiod.Chips()
+	cc := gpiocdev.Chips()
 	require.GreaterOrEqual(t, len(cc), 1)
 	assert.Contains(t, cc, platform.Name())
 }
@@ -184,12 +184,12 @@ func TestChipClose(t *testing.T) {
 
 	// closed
 	err = c.Close()
-	assert.Equal(t, gpiod.ErrClosed, err)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 
 	// with lines
 	c = getChip(t)
 	require.NotNil(t, c)
-	ll, err := c.RequestLines(platform.FloatingLines(), gpiod.WithBothEdges)
+	ll, err := c.RequestLines(platform.FloatingLines(), gpiocdev.WithBothEdges)
 	assert.Nil(t, err)
 	err = c.Close()
 	assert.Nil(t, err)
@@ -200,7 +200,7 @@ func TestChipClose(t *testing.T) {
 	// after lines closed
 	c = getChip(t)
 	require.NotNil(t, c)
-	ll, err = c.RequestLines(platform.FloatingLines(), gpiod.WithBothEdges)
+	ll, err = c.RequestLines(platform.FloatingLines(), gpiocdev.WithBothEdges)
 	assert.Nil(t, err)
 	require.NotNil(t, ll)
 	err = ll.Close()
@@ -211,20 +211,20 @@ func TestChipClose(t *testing.T) {
 
 func TestChipLineInfo(t *testing.T) {
 	c := getChip(t)
-	xli := gpiod.LineInfo{}
+	xli := gpiocdev.LineInfo{}
 	// out of range
 	li, err := c.LineInfo(platform.Lines())
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	assert.Equal(t, xli, li)
 
 	// valid
 	li, err = c.LineInfo(platform.IntrLine())
 	assert.Nil(t, err)
-	xli = gpiod.LineInfo{
+	xli = gpiocdev.LineInfo{
 		Offset: platform.IntrLine(),
 		Name:   platform.IntrName(),
-		Config: gpiod.LineConfig{
-			Direction: gpiod.LineDirectionInput,
+		Config: gpiocdev.LineConfig{
+			Direction: gpiocdev.LineDirectionInput,
 		},
 	}
 	assert.Equal(t, xli, li)
@@ -233,7 +233,7 @@ func TestChipLineInfo(t *testing.T) {
 	c.Close()
 	li, err = c.LineInfo(1)
 	assert.NotNil(t, err)
-	xli = gpiod.LineInfo{}
+	xli = gpiocdev.LineInfo{}
 	assert.Equal(t, xli, li)
 }
 
@@ -252,12 +252,12 @@ func TestChipRequestLine(t *testing.T) {
 
 	// negative
 	l, err := c.RequestLine(-1)
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	require.Nil(t, l)
 
 	// out of range
 	l, err = c.RequestLine(c.Lines())
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	require.Nil(t, l)
 
 	// success - input
@@ -271,12 +271,12 @@ func TestChipRequestLine(t *testing.T) {
 	require.Nil(t, l2)
 
 	// already requested output
-	l2, err = c.RequestLine(lo, gpiod.AsOutput(0))
+	l2, err = c.RequestLine(lo, gpiocdev.AsOutput(0))
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, l2)
 
 	// already requested output as event
-	l2, err = c.RequestLine(lo, gpiod.WithBothEdges)
+	l2, err = c.RequestLine(lo, gpiocdev.WithBothEdges)
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, l2)
 
@@ -290,16 +290,16 @@ func TestChipRequestLines(t *testing.T) {
 
 	// negative
 	ll, err := c.RequestLines([]int{platform.IntrLine(), -1})
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	require.Nil(t, ll)
 
 	// out of range
 	ll, err = c.RequestLines([]int{platform.IntrLine(), c.Lines()})
-	assert.Equal(t, gpiod.ErrInvalidOffset, err)
+	assert.Equal(t, gpiocdev.ErrInvalidOffset, err)
 	require.Nil(t, ll)
 
 	// success - output
-	ll, err = c.RequestLines(platform.FloatingLines(), gpiod.AsOutput())
+	ll, err = c.RequestLines(platform.FloatingLines(), gpiocdev.AsOutput())
 	assert.Nil(t, err)
 	require.NotNil(t, ll)
 
@@ -309,12 +309,12 @@ func TestChipRequestLines(t *testing.T) {
 	require.Nil(t, ll2)
 
 	// already requested output
-	ll2, err = c.RequestLines(platform.FloatingLines(), gpiod.AsOutput())
+	ll2, err = c.RequestLines(platform.FloatingLines(), gpiocdev.AsOutput())
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, ll2)
 
 	// already requested output as event
-	ll2, err = c.RequestLines(platform.FloatingLines(), gpiod.WithBothEdges)
+	ll2, err = c.RequestLines(platform.FloatingLines(), gpiocdev.WithBothEdges)
 	assert.Equal(t, unix.EBUSY, err)
 	require.Nil(t, ll2)
 
@@ -328,15 +328,15 @@ func TestChipWatchLineInfo(t *testing.T) {
 	c := getChip(t)
 
 	lo := platform.FloatingLines()[0]
-	wc1 := make(chan gpiod.LineInfoChangeEvent, 5)
-	watcher1 := func(info gpiod.LineInfoChangeEvent) {
+	wc1 := make(chan gpiocdev.LineInfoChangeEvent, 5)
+	watcher1 := func(info gpiocdev.LineInfoChangeEvent) {
 		wc1 <- info
 	}
 
 	// closed
 	c.Close()
 	_, err := c.WatchLineInfo(lo, watcher1)
-	require.Equal(t, gpiod.ErrClosed, err)
+	require.Equal(t, gpiocdev.ErrClosed, err)
 
 	c = getChip(t)
 	defer c.Close()
@@ -348,16 +348,16 @@ func TestChipWatchLineInfo(t *testing.T) {
 	l, err := c.RequestLine(lo)
 	assert.Nil(t, err)
 	require.NotNil(t, l)
-	waitInfoEvent(t, wc1, gpiod.LineRequested)
-	l.Reconfigure(gpiod.AsActiveLow)
-	waitInfoEvent(t, wc1, gpiod.LineReconfigured)
+	waitInfoEvent(t, wc1, gpiocdev.LineRequested)
+	l.Reconfigure(gpiocdev.AsActiveLow)
+	waitInfoEvent(t, wc1, gpiocdev.LineReconfigured)
 	l.Close()
-	waitInfoEvent(t, wc1, gpiod.LineReleased)
+	waitInfoEvent(t, wc1, gpiocdev.LineReleased)
 
-	wc2 := make(chan gpiod.LineInfoChangeEvent, 2)
+	wc2 := make(chan gpiocdev.LineInfoChangeEvent, 2)
 
 	// watched
-	watcher2 := func(info gpiod.LineInfoChangeEvent) {
+	watcher2 := func(info gpiocdev.LineInfoChangeEvent) {
 		wc2 <- info
 	}
 	_, err = c.WatchLineInfo(lo, watcher2)
@@ -366,10 +366,10 @@ func TestChipWatchLineInfo(t *testing.T) {
 	l, err = c.RequestLine(lo)
 	assert.Nil(t, err)
 	require.NotNil(t, l)
-	waitInfoEvent(t, wc1, gpiod.LineRequested)
+	waitInfoEvent(t, wc1, gpiocdev.LineRequested)
 	waitNoInfoEvent(t, wc2)
 	l.Close()
-	waitInfoEvent(t, wc1, gpiod.LineReleased)
+	waitInfoEvent(t, wc1, gpiocdev.LineReleased)
 	waitNoInfoEvent(t, wc2)
 }
 
@@ -394,7 +394,7 @@ func TestChipUnwatchLineInfo(t *testing.T) {
 
 	// Watched
 	wc := 0
-	watcher := func(info gpiod.LineInfoChangeEvent) {
+	watcher := func(info gpiocdev.LineInfoChangeEvent) {
 		wc++
 	}
 	_, err = c.WatchLineInfo(lo, watcher)
@@ -431,13 +431,13 @@ func TestLineClose(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = l.Close()
-	assert.Equal(t, gpiod.ErrClosed, err)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 }
 
 func TestLineInfo(t *testing.T) {
 	c := getChip(t)
 	defer c.Close()
-	l, err := c.RequestLine(platform.IntrLine(), gpiod.WithBothEdges)
+	l, err := c.RequestLine(platform.IntrLine(), gpiocdev.WithBothEdges)
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 	cli, err := c.LineInfo(platform.IntrLine())
@@ -457,7 +457,7 @@ func TestLineInfo(t *testing.T) {
 	// closed
 	l.Close()
 	_, err = l.Info()
-	assert.Equal(t, gpiod.ErrClosed, err)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 }
 
 func TestLineOffset(t *testing.T) {
@@ -474,19 +474,19 @@ func TestLineOffset(t *testing.T) {
 func TestLineReconfigure(t *testing.T) {
 	requireKernel(t, setConfigKernel)
 
-	c := getChip(t, gpiod.WithConsumer("TestLineReconfigure"))
+	c := getChip(t, gpiocdev.WithConsumer("TestLineReconfigure"))
 	defer c.Close()
 
 	offset := platform.IntrLine()
-	xinf := gpiod.LineInfo{
+	xinf := gpiocdev.LineInfo{
 		Used:     true,
 		Consumer: "TestLineReconfigure",
 		Offset:   offset,
-		Config: gpiod.LineConfig{
-			Direction: gpiod.LineDirectionInput,
+		Config: gpiocdev.LineConfig{
+			Direction: gpiocdev.LineDirectionInput,
 		},
 	}
-	l, err := c.RequestLine(offset, gpiod.AsInput)
+	l, err := c.RequestLine(offset, gpiocdev.AsInput)
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 
@@ -503,7 +503,7 @@ func TestLineReconfigure(t *testing.T) {
 	assert.Equal(t, xinf, inf)
 
 	// an option
-	err = l.Reconfigure(gpiod.AsActiveLow)
+	err = l.Reconfigure(gpiocdev.AsActiveLow)
 	assert.Nil(t, err)
 	inf, err = c.LineInfo(offset)
 	assert.Nil(t, err)
@@ -512,13 +512,13 @@ func TestLineReconfigure(t *testing.T) {
 
 	// closed
 	l.Close()
-	err = l.Reconfigure(gpiod.AsActiveLow)
-	assert.Equal(t, gpiod.ErrClosed, err)
+	err = l.Reconfigure(gpiocdev.AsActiveLow)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 
 	// event request
 	l, err = c.RequestLine(offset,
-		gpiod.WithBothEdges,
-		gpiod.WithEventHandler(func(gpiod.LineEvent) {}))
+		gpiocdev.WithBothEdges,
+		gpiocdev.WithEventHandler(func(gpiocdev.LineEvent) {}))
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 
@@ -527,11 +527,11 @@ func TestLineReconfigure(t *testing.T) {
 	xinf.Config.ActiveLow = false
 	if l.UapiAbiVersion() != 1 {
 		// uAPI v1 does not return edge detection status in info
-		xinf.Config.EdgeDetection = gpiod.LineEdgeBoth
+		xinf.Config.EdgeDetection = gpiocdev.LineEdgeBoth
 	}
 	assert.Equal(t, xinf, inf)
 
-	err = l.Reconfigure(gpiod.AsActiveLow)
+	err = l.Reconfigure(gpiocdev.AsActiveLow)
 	switch l.UapiAbiVersion() {
 	case 1:
 		assert.Equal(t, unix.EINVAL, err)
@@ -548,21 +548,21 @@ func TestLineReconfigure(t *testing.T) {
 func TestLinesReconfigure(t *testing.T) {
 	requireKernel(t, setConfigKernel)
 
-	c := getChip(t, gpiod.WithConsumer("TestLinesReconfigure"))
+	c := getChip(t, gpiocdev.WithConsumer("TestLinesReconfigure"))
 	defer c.Close()
 
 	offsets := platform.FloatingLines()
 	offset := offsets[1]
-	ll, err := c.RequestLines(offsets, gpiod.AsInput)
+	ll, err := c.RequestLines(offsets, gpiocdev.AsInput)
 	assert.Nil(t, err)
 	require.NotNil(t, ll)
 
-	xinf := gpiod.LineInfo{
+	xinf := gpiocdev.LineInfo{
 		Used:     true,
 		Consumer: "TestLinesReconfigure",
 		Offset:   offset,
-		Config: gpiod.LineConfig{
-			Direction: gpiod.LineDirectionInput,
+		Config: gpiocdev.LineConfig{
+			Direction: gpiocdev.LineDirectionInput,
 		},
 	}
 	inf, err := c.LineInfo(offset)
@@ -578,7 +578,7 @@ func TestLinesReconfigure(t *testing.T) {
 	assert.Equal(t, xinf, inf)
 
 	// one option
-	err = ll.Reconfigure(gpiod.AsActiveLow)
+	err = ll.Reconfigure(gpiocdev.AsActiveLow)
 	assert.Nil(t, err)
 	inf, err = c.LineInfo(offset)
 	assert.Nil(t, err)
@@ -590,8 +590,8 @@ func TestLinesReconfigure(t *testing.T) {
 
 		// WithLines
 		err = ll.Reconfigure(
-			gpiod.WithLines(inner, gpiod.WithPullUp),
-			gpiod.AsActiveHigh,
+			gpiocdev.WithLines(inner, gpiocdev.WithPullUp),
+			gpiocdev.AsActiveHigh,
 		)
 		assert.Nil(t, err)
 
@@ -600,14 +600,14 @@ func TestLinesReconfigure(t *testing.T) {
 		xinf.Config.ActiveLow = false
 		assert.Equal(t, xinf, inf)
 
-		xinfi := gpiod.LineInfo{
+		xinfi := gpiocdev.LineInfo{
 			Used:     true,
 			Consumer: "TestLinesReconfigure",
 			Offset:   inner[0],
-			Config: gpiod.LineConfig{
+			Config: gpiocdev.LineConfig{
 				ActiveLow: true,
-				Bias:      gpiod.LineBiasPullUp,
-				Direction: gpiod.LineDirectionInput,
+				Bias:      gpiocdev.LineBiasPullUp,
+				Direction: gpiocdev.LineDirectionInput,
 			},
 		}
 		inf, err = c.LineInfo(inner[0])
@@ -623,7 +623,7 @@ func TestLinesReconfigure(t *testing.T) {
 
 		// single WithLines -> 3 distinct configs
 		err = ll.Reconfigure(
-			gpiod.WithLines(inner[:1], gpiod.WithPullDown),
+			gpiocdev.WithLines(inner[:1], gpiocdev.WithPullDown),
 		)
 		assert.Nil(t, err)
 
@@ -641,20 +641,20 @@ func TestLinesReconfigure(t *testing.T) {
 		inf, err = c.LineInfo(inner[0])
 		assert.Nil(t, err)
 		xinfi.Offset = inner[0]
-		xinfi.Config.Bias = gpiod.LineBiasPullDown
+		xinfi.Config.Bias = gpiocdev.LineBiasPullDown
 		xinfi.Name = inf.Name // don't care about line name
 		assert.Equal(t, xinfi, inf)
 	}
 
 	// closed
 	ll.Close()
-	err = ll.Reconfigure(gpiod.AsActiveLow)
-	assert.Equal(t, gpiod.ErrClosed, err)
+	err = ll.Reconfigure(gpiocdev.AsActiveLow)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 
 	// event request
 	ll, err = c.RequestLines(offsets,
-		gpiod.WithBothEdges,
-		gpiod.WithEventHandler(func(gpiod.LineEvent) {}))
+		gpiocdev.WithBothEdges,
+		gpiocdev.WithEventHandler(func(gpiocdev.LineEvent) {}))
 	assert.Nil(t, err)
 	require.NotNil(t, ll)
 
@@ -663,11 +663,11 @@ func TestLinesReconfigure(t *testing.T) {
 	xinf.Config.ActiveLow = false
 	if ll.UapiAbiVersion() != 1 {
 		// uAPI v1 does not return edge detection status in info
-		xinf.Config.EdgeDetection = gpiod.LineEdgeBoth
+		xinf.Config.EdgeDetection = gpiocdev.LineEdgeBoth
 	}
 	assert.Equal(t, xinf, inf)
 
-	err = ll.Reconfigure(gpiod.AsActiveLow)
+	err = ll.Reconfigure(gpiocdev.AsActiveLow)
 	switch ll.UapiAbiVersion() {
 	case 1:
 		assert.Equal(t, unix.EINVAL, err)
@@ -698,7 +698,7 @@ func TestLineValue(t *testing.T) {
 	assert.Equal(t, 1, v)
 	l.Close()
 	_, err = l.Value()
-	assert.Equal(t, gpiod.ErrClosed, err)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 }
 
 func TestLineSetValue(t *testing.T) {
@@ -712,19 +712,19 @@ func TestLineSetValue(t *testing.T) {
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 	err = l.SetValue(1)
-	assert.Equal(t, gpiod.ErrPermissionDenied, err)
+	assert.Equal(t, gpiocdev.ErrPermissionDenied, err)
 	l.Close()
 
 	// output
 	l, err = c.RequestLine(lo,
-		gpiod.AsOutput(0))
+		gpiocdev.AsOutput(0))
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 	err = l.SetValue(1)
 	assert.Nil(t, err)
 	l.Close()
 	err = l.SetValue(1)
-	assert.Equal(t, gpiod.ErrClosed, err)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 }
 
 func TestLinesChip(t *testing.T) {
@@ -748,7 +748,7 @@ func TestLinesClose(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = l.Close()
-	assert.Equal(t, gpiod.ErrClosed, err)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 }
 
 func TestLinesInfo(t *testing.T) {
@@ -785,7 +785,7 @@ func TestLinesInfo(t *testing.T) {
 	// closed
 	l.Close()
 	li, err = l.Info()
-	assert.Equal(t, gpiod.ErrClosed, err)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 	assert.Nil(t, li)
 }
 
@@ -833,7 +833,7 @@ func TestLinesValues(t *testing.T) {
 
 	// output
 	lines = platform.FloatingLines()
-	l, err = c.RequestLines(lines, gpiod.AsOutput(0))
+	l, err = c.RequestLines(lines, gpiocdev.AsOutput(0))
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 	err = l.Values(vv)
@@ -852,12 +852,12 @@ func TestLinesSetValues(t *testing.T) {
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 	err = l.SetValues([]int{0, 1})
-	assert.Equal(t, gpiod.ErrPermissionDenied, err)
+	assert.Equal(t, gpiocdev.ErrPermissionDenied, err)
 	l.Close()
 
 	// output
 	l, err = c.RequestLines(platform.FloatingLines(),
-		gpiod.AsOutput(0))
+		gpiocdev.AsOutput(0))
 	assert.Nil(t, err)
 	require.NotNil(t, l)
 	err = l.SetValues([]int{1, 0})
@@ -870,26 +870,26 @@ func TestLinesSetValues(t *testing.T) {
 	// closed
 	l.Close()
 	err = l.SetValues([]int{0, 1})
-	assert.Equal(t, gpiod.ErrClosed, err)
+	assert.Equal(t, gpiocdev.ErrClosed, err)
 }
 
 func TestIsChip(t *testing.T) {
 	// nonexistent
-	err := gpiod.IsChip("/dev/nonexistent")
+	err := gpiocdev.IsChip("/dev/nonexistent")
 	assert.NotNil(t, err)
 
 	// wrong mode
-	err = gpiod.IsChip("/dev/zero")
-	assert.Equal(t, gpiod.ErrNotCharacterDevice, err)
+	err = gpiocdev.IsChip("/dev/zero")
+	assert.Equal(t, gpiocdev.ErrNotCharacterDevice, err)
 
 	// no sysfs
-	err = gpiod.IsChip("/dev/null")
-	assert.Equal(t, gpiod.ErrNotCharacterDevice, err)
+	err = gpiocdev.IsChip("/dev/null")
+	assert.Equal(t, gpiocdev.ErrNotCharacterDevice, err)
 
 	// not sure how to test the remaining conditions...
 }
 
-func waitInfoEvent(t *testing.T, ch <-chan gpiod.LineInfoChangeEvent, etype gpiod.LineInfoChangeType) {
+func waitInfoEvent(t *testing.T, ch <-chan gpiocdev.LineInfoChangeEvent, etype gpiocdev.LineInfoChangeType) {
 	t.Helper()
 	select {
 	case evt := <-ch:
@@ -899,7 +899,7 @@ func waitInfoEvent(t *testing.T, ch <-chan gpiod.LineInfoChangeEvent, etype gpio
 	}
 }
 
-func waitNoInfoEvent(t *testing.T, ch <-chan gpiod.LineInfoChangeEvent) {
+func waitNoInfoEvent(t *testing.T, ch <-chan gpiocdev.LineInfoChangeEvent) {
 	t.Helper()
 	select {
 	case evt := <-ch:
@@ -908,11 +908,11 @@ func waitNoInfoEvent(t *testing.T, ch <-chan gpiod.LineInfoChangeEvent) {
 	}
 }
 
-func getChip(t *testing.T, chipOpts ...gpiod.ChipOption) *gpiod.Chip {
+func getChip(t *testing.T, chipOpts ...gpiocdev.ChipOption) *gpiocdev.Chip {
 	if kernelAbiVersion != 0 {
-		chipOpts = append(chipOpts, gpiod.ABIVersionOption(kernelAbiVersion))
+		chipOpts = append(chipOpts, gpiocdev.ABIVersionOption(kernelAbiVersion))
 	}
-	c, err := gpiod.NewChip(platform.Devpath(), chipOpts...)
+	c, err := gpiocdev.NewChip(platform.Devpath(), chipOpts...)
 	require.Nil(t, err)
 	require.NotNil(t, c)
 	return c
@@ -980,12 +980,12 @@ type Platform interface {
 
 type RaspberryPi struct {
 	gpiochip
-	chip  *gpiod.Chip
-	wline *gpiod.Line
+	chip  *gpiocdev.Chip
+	wline *gpiocdev.Line
 }
 
 func isPi(path string) error {
-	if err := gpiod.IsChip(path); err != nil {
+	if err := gpiocdev.IsChip(path); err != nil {
 		return err
 	}
 	f, err := os.OpenFile(path, unix.O_CLOEXEC, unix.O_RDONLY)
@@ -1008,7 +1008,7 @@ func newPi(path string) (*RaspberryPi, error) {
 	if err := isPi(path); err != nil {
 		return nil, err
 	}
-	ch, err := gpiod.NewChip(path)
+	ch, err := gpiocdev.NewChip(path)
 	if err != nil {
 		return nil, err
 	}
@@ -1034,14 +1034,14 @@ func newPi(path string) (*RaspberryPi, error) {
 		pi.introName = "GPIO22"
 	}
 	// check J8p15 and J8p16 are tied
-	w, err := ch.RequestLine(pi.outo, gpiod.AsOutput(1),
-		gpiod.WithConsumer("gpiod-test-w"))
+	w, err := ch.RequestLine(pi.outo, gpiocdev.AsOutput(1),
+		gpiocdev.WithConsumer("gpiocdev-test-w"))
 	if err != nil {
 		return nil, err
 	}
 	defer w.Close()
 	r, err := ch.RequestLine(pi.intro,
-		gpiod.WithConsumer("gpiod-test-r"))
+		gpiocdev.WithConsumer("gpiocdev-test-r"))
 	if err != nil {
 		return nil, err
 	}
@@ -1082,7 +1082,7 @@ func (c *RaspberryPi) OutLine() int {
 
 func (c *RaspberryPi) ReadOut() int {
 	r, err := c.chip.RequestLine(c.intro,
-		gpiod.WithConsumer("gpiod-test-r"))
+		gpiocdev.WithConsumer("gpiocdev-test-r"))
 	if err != nil {
 		return -1
 	}
@@ -1104,8 +1104,8 @@ func (c *RaspberryPi) TriggerIntr(value int) {
 		c.wline.SetValue(value)
 		return
 	}
-	w, _ := c.chip.RequestLine(c.outo, gpiod.AsOutput(value),
-		gpiod.WithConsumer("gpiod-test-w"))
+	w, _ := c.chip.RequestLine(c.outo, gpiocdev.AsOutput(value),
+		gpiocdev.WithConsumer("gpiocdev-test-w"))
 	c.wline = w
 }
 
@@ -1179,7 +1179,7 @@ func requireKernel(t *testing.T, min mockup.Semver) {
 	}
 }
 
-func requireABI(t *testing.T, chip *gpiod.Chip, abi int) {
+func requireABI(t *testing.T, chip *gpiocdev.Chip, abi int) {
 	t.Helper()
 	if chip.UapiAbiVersion() != abi {
 		t.Skip(ErrorBadABIVersion{abi, chip.UapiAbiVersion()})

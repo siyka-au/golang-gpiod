@@ -16,8 +16,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/warthog618/gpiod/mockup"
-	"github.com/warthog618/gpiod/uapi"
+	"github.com/warthog618/go-gpiocdev/mockup"
+	"github.com/warthog618/go-gpiocdev/uapi"
 	"golang.org/x/sys/unix"
 )
 

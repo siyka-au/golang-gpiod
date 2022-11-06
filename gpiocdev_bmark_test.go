@@ -2,25 +2,25 @@
 //
 // SPDX-License-Identifier: MIT
 
-package gpiod_test
+package gpiocdev_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/warthog618/gpiod"
+	"github.com/warthog618/go-gpiocdev"
 )
 
 func BenchmarkChipNewClose(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		c, _ := gpiod.NewChip(platform.Devpath())
+		c, _ := gpiocdev.NewChip(platform.Devpath())
 		c.Close()
 	}
 }
 
 func BenchmarkLineInfo(b *testing.B) {
-	c, err := gpiod.NewChip(platform.Devpath())
+	c, err := gpiocdev.NewChip(platform.Devpath())
 	require.Nil(b, err)
 	require.NotNil(b, c)
 	defer c.Close()
@@ -30,7 +30,7 @@ func BenchmarkLineInfo(b *testing.B) {
 }
 
 func BenchmarkLineReconfigure(b *testing.B) {
-	c, err := gpiod.NewChip(platform.Devpath())
+	c, err := gpiocdev.NewChip(platform.Devpath())
 	require.Nil(b, err)
 	require.NotNil(b, c)
 	defer c.Close()
@@ -39,12 +39,12 @@ func BenchmarkLineReconfigure(b *testing.B) {
 	require.NotNil(b, l)
 	defer l.Close()
 	for i := 0; i < b.N; i++ {
-		l.Reconfigure(gpiod.AsActiveLow)
+		l.Reconfigure(gpiocdev.AsActiveLow)
 	}
 }
 
 func BenchmarkLineValue(b *testing.B) {
-	c, err := gpiod.NewChip(platform.Devpath())
+	c, err := gpiocdev.NewChip(platform.Devpath())
 	require.Nil(b, err)
 	require.NotNil(b, c)
 	defer c.Close()
@@ -58,7 +58,7 @@ func BenchmarkLineValue(b *testing.B) {
 }
 
 func BenchmarkLinesValues(b *testing.B) {
-	c, err := gpiod.NewChip(platform.Devpath())
+	c, err := gpiocdev.NewChip(platform.Devpath())
 	require.Nil(b, err)
 	require.NotNil(b, c)
 	defer c.Close()
@@ -72,11 +72,11 @@ func BenchmarkLinesValues(b *testing.B) {
 	}
 }
 func BenchmarkLineSetValue(b *testing.B) {
-	c, err := gpiod.NewChip(platform.Devpath())
+	c, err := gpiocdev.NewChip(platform.Devpath())
 	require.Nil(b, err)
 	require.NotNil(b, c)
 	defer c.Close()
-	l, err := c.RequestLine(platform.FloatingLines()[0], gpiod.AsOutput(0))
+	l, err := c.RequestLine(platform.FloatingLines()[0], gpiocdev.AsOutput(0))
 	require.Nil(b, err)
 	require.NotNil(b, l)
 	defer l.Close()
@@ -86,11 +86,11 @@ func BenchmarkLineSetValue(b *testing.B) {
 }
 
 func BenchmarkLinesSetValues(b *testing.B) {
-	c, err := gpiod.NewChip(platform.Devpath())
+	c, err := gpiocdev.NewChip(platform.Devpath())
 	require.Nil(b, err)
 	require.NotNil(b, c)
 	defer c.Close()
-	ll, err := c.RequestLines(platform.FloatingLines(), gpiod.AsOutput(0))
+	ll, err := c.RequestLines(platform.FloatingLines(), gpiocdev.AsOutput(0))
 	require.Nil(b, err)
 	require.NotNil(b, ll)
 	defer ll.Close()
@@ -102,18 +102,18 @@ func BenchmarkLinesSetValues(b *testing.B) {
 }
 
 func BenchmarkInterruptLatency(b *testing.B) {
-	c, err := gpiod.NewChip(platform.Devpath())
+	c, err := gpiocdev.NewChip(platform.Devpath())
 	require.Nil(b, err)
 	require.NotNil(b, c)
 	defer c.Close()
 	platform.TriggerIntr(1)
 	ich := make(chan int)
-	eh := func(evt gpiod.LineEvent) {
+	eh := func(evt gpiocdev.LineEvent) {
 		ich <- 1
 	}
 	r, err := c.RequestLine(platform.IntrLine(),
-		gpiod.WithBothEdges,
-		gpiod.WithEventHandler(eh))
+		gpiocdev.WithBothEdges,
+		gpiocdev.WithEventHandler(eh))
 	require.Nil(b, err)
 	require.NotNil(b, r)
 	// absorb any pending interrupt

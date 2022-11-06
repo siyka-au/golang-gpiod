@@ -5,7 +5,7 @@
 //go:build linux
 // +build linux
 
-// A clone of libgpiod gpiofind.
+// A clone of libgpiocdev gpiofind.
 package main
 
 import (
@@ -14,7 +14,7 @@ import (
 
 	"github.com/warthog618/config"
 	"github.com/warthog618/config/pflag"
-	"github.com/warthog618/gpiod"
+	"github.com/warthog618/go-gpiocdev"
 )
 
 var version = "undefined"
@@ -23,8 +23,8 @@ func main() {
 	flags := loadConfig()
 	linename := flags.Args()[0]
 	ec := 1
-	for _, cname := range gpiod.Chips() {
-		c, err := gpiod.NewChip(cname)
+	for _, cname := range gpiocdev.Chips() {
+		c, err := gpiocdev.NewChip(cname)
 		if err != nil {
 			continue
 		}
@@ -83,5 +83,5 @@ func printHelp() {
 }
 
 func printVersion() {
-	fmt.Printf("%s (gpiod) %s\n", os.Args[0], version)
+	fmt.Printf("%s (gpiocdev) %s\n", os.Args[0], version)
 }

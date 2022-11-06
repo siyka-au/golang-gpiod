@@ -13,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/warthog618/gpiod/mockup"
+	"github.com/warthog618/go-gpiocdev/mockup"
 	"golang.org/x/sys/unix"
 )
 

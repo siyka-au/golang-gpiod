@@ -5,7 +5,7 @@
 //go:build linux
 // +build linux
 
-// A clone of libgpiod gpioget.
+// A clone of libgpiocdev gpioget.
 package main
 
 import (
@@ -18,7 +18,7 @@ import (
 	"github.com/warthog618/config/dict"
 	"github.com/warthog618/config/keys"
 	"github.com/warthog618/config/pflag"
-	"github.com/warthog618/gpiod"
+	"github.com/warthog618/go-gpiocdev"
 )
 
 var version = "undefined"
@@ -26,7 +26,7 @@ var version = "undefined"
 func main() {
 	cfg, flags := loadConfig()
 	name := flags.Args()[0]
-	c, err := gpiod.NewChip(name, gpiod.WithConsumer("gpioget"))
+	c, err := gpiocdev.NewChip(name, gpiocdev.WithConsumer("gpioget"))
 	if err != nil {
 		die(err.Error())
 	}
@@ -50,22 +50,22 @@ func main() {
 	fmt.Println(vstr)
 }
 
-func makeOpts(cfg *config.Config) []gpiod.LineReqOption {
-	opts := []gpiod.LineReqOption{}
+func makeOpts(cfg *config.Config) []gpiocdev.LineReqOption {
+	opts := []gpiocdev.LineReqOption{}
 	if cfg.MustGet("active-low").Bool() {
-		opts = append(opts, gpiod.AsActiveLow)
+		opts = append(opts, gpiocdev.AsActiveLow)
 	}
 	if !cfg.MustGet("as-is").Bool() {
-		opts = append(opts, gpiod.AsInput)
+		opts = append(opts, gpiocdev.AsInput)
 	}
 	bias := strings.ToLower(cfg.MustGet("bias").String())
 	switch bias {
 	case "pull-up":
-		opts = append(opts, gpiod.WithPullUp)
+		opts = append(opts, gpiocdev.WithPullUp)
 	case "pull-down":
-		opts = append(opts, gpiod.WithPullDown)
+		opts = append(opts, gpiocdev.WithPullDown)
 	case "disable":
-		opts = append(opts, gpiod.WithBiasDisabled)
+		opts = append(opts, gpiocdev.WithBiasDisabled)
 	case "as-is":
 		fallthrough
 	default:
@@ -151,5 +151,5 @@ func printHelp() {
 }
 
 func printVersion() {
-	fmt.Printf("%s (gpiod) %s\n", os.Args[0], version)
+	fmt.Printf("%s (gpiocdev) %s\n", os.Args[0], version)
 }
